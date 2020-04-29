@@ -7,7 +7,7 @@ time throughout the execution of the algorithm, such as:
 Each schedule has a function `value(t)` which returns the current value
 of the parameter given the timestep t of the optimization procedure.
 """
-
+import numpy as np
 
 class Schedule(object):
     def value(self, t):
@@ -97,3 +97,18 @@ class LinearSchedule(object):
         """See Schedule.value"""
         fraction = min(float(t) / self.schedule_timesteps, 1.0)
         return self.initial_p + fraction * (self.final_p - self.initial_p)
+
+class PowerSchedule(object):
+    def __init__(self, power_coef):
+        """Power schedule (input t): 1 / ((1 + t)**power_coef)
+
+        Parameters
+        ----------
+        power_coef: float
+            power coefficient
+        """
+        self.power_coef = power_coef
+
+    def value(self, t):
+        """See Schedule.value"""
+        return 1 / np.power(1 + t, self.power_coef)
