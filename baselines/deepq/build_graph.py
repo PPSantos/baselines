@@ -98,6 +98,7 @@ The functions in this file can are used to create the following functions:
 """
 import tensorflow as tf
 import baselines.common.tf_util as U
+import sys
 
 
 def scope_vars(scope, trainable_only=False):
@@ -185,16 +186,23 @@ def build_act(make_obs_ph, q_func, num_actions, scope="deepq", reuse=None):
 
         q_values = q_func(observations_ph.get(), num_actions, scope="q_func")
         deterministic_actions = tf.argmax(q_values, axis=1)
+        q_values = q_values*eps
 
-        batch_size = tf.shape(observations_ph.get())[0]
+        probs = tf.nn.softmax(q_values,axis=1)
+
+        stochastic_actions = tf.random.categorical(probs,1)
+
+        #tf.print("Teste action ",stochastic_actions, output_stream=sys.stdout)
+
+        """ batch_size = tf.shape(observations_ph.get())[0]
         random_actions = tf.random_uniform(tf.stack([batch_size]), minval=0, maxval=num_actions, dtype=tf.int64)
         chose_random = tf.random_uniform(tf.stack([batch_size]), minval=0, maxval=1, dtype=tf.float32) < eps
-        stochastic_actions = tf.where(chose_random, random_actions, deterministic_actions)
+        stochastic_actions = tf.where(chose_random, random_actions, deterministic_actions) """
 
         output_actions = tf.cond(stochastic_ph, lambda: stochastic_actions, lambda: deterministic_actions)
         update_eps_expr = eps.assign(tf.cond(update_eps_ph >= 0, lambda: update_eps_ph, lambda: eps))
         _act = U.function(inputs=[observations_ph, stochastic_ph, update_eps_ph],
-                         outputs=[output_actions, chose_random],
+                         outputs=[output_actions, output_actions],
                          givens={update_eps_ph: -1.0, stochastic_ph: True},
                          updates=[update_eps_expr])
         def act(ob, stochastic=True, update_eps=-1):
