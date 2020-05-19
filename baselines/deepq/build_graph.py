@@ -186,13 +186,11 @@ def build_act(make_obs_ph, q_func, num_actions, scope="deepq", reuse=None):
 
         q_values = q_func(observations_ph.get(), num_actions, scope="q_func")
         deterministic_actions = tf.argmax(q_values, axis=1)
-        q_values = q_values*eps
+        q_values = q_values/eps #eps -> tau -> temperature
 
         probs = tf.nn.softmax(q_values,axis=1)
 
         stochastic_actions = tf.random.categorical(probs,1)
-
-        #tf.print("Teste action ",stochastic_actions, output_stream=sys.stdout)
 
         """ batch_size = tf.shape(observations_ph.get())[0]
         random_actions = tf.random_uniform(tf.stack([batch_size]), minval=0, maxval=num_actions, dtype=tf.int64)
