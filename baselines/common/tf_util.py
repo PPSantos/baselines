@@ -55,6 +55,15 @@ def get_session(config=None):
         sess = make_session(config=config, make_default=True)
     return sess
 
+def reset_session():
+    """Resets tf session (clears any leftover variables)"""
+    sess = tf.get_default_session()
+    if sess:
+        tf.reset_default_graph()
+        sess.close()
+        global ALREADY_INITIALIZED
+        ALREADY_INITIALIZED = set()
+
 def make_session(config=None, num_cpu=None, make_default=False, graph=None):
     """Returns a session that will use <num_cpu> CPU's only"""
     if num_cpu is None:
